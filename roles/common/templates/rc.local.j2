@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# This script will be executed *after* all the other init scripts.
+# You can put your own initialization stuff in here if you don't
+# want to do the full Sys V style init stuff.
+
+touch /var/lock/subsys/local
+
+# http://dev.classmethod.jp/cloud/ec2linux-swap-bestpractice/ より拝借
+
+SWAPFILENAME=/swap.img
+MEMSIZE=`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`
+
+if [ $MEMSIZE -lt 2097152 ]; then
+  SIZE=`expr $MEMSIZE \* 2`k
+elif [ $MEMSIZE -lt 8388608 ]; then
+  SIZE=${MEMSIZE}k
+elif [ $MEMSIZE -lt 67108864 ]; then
+  SIZE=`expr $MEMSIZE / 2`k
+else
+  SIZE=4194304k
+fi
+
+fallocate -l $SIZE $SWAPFILENAME && mkswap $SWAPFILENAME && swapon $SWAPFILENAME

@@ -1,0 +1,20 @@
+---
+
+webserver: ansible-lamp.example.com
+apache_user: webmaster
+basic_auth_user: webmaster
+basic_auth_passwd: basic_passwd
+
+s3_aws_key: AKI********************
+s3_aws_secret: **************************************
+s3_log_bucket: ansible-lamp-log
+s3_backup_bucket: ansible-lamp-backup
+
+mysql_root_password: mysqladmin_password
+dbname: wordpress_db
+dbuser: wordpress_dbuser
+dbpass: wordpress_dbpass
+db_backup_path: /home/{{ apache_user }}/db_backup/
+
+mackerel_api_key: *********************************
+

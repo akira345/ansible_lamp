@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# log backup
+/usr/local/bin/s3cmd sync /var/log/httpd/{{ webserver }}/ s3://{{ s3_log_bucket }}/{{ webserver }}/web/
+
+# web & db backup
+/usr/local/bin/s3cmd sync /home/{{ apache_user  }}/www/ s3://{{ s3_backup_bucket }}/{{ webserver }}/web/
+/usr/local/bin/s3cmd sync /home/{{ apache_user  }}/db_backup/ s3://{{ s3_backup_bucket }}/{{ webserver }}/db/

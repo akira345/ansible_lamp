@@ -1,0 +1,9 @@
+---
+- include: install_httpd.yml
+- include: create_user.yml
+- include: settings.yml
+- include: ssl.yml
+
+# 何故かnotifyがうまく動かないので念のため。
+- name: "start and enable apache on boot"
+  service: name=httpd state=started enabled=yes

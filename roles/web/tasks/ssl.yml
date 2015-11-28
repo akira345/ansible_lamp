@@ -1,0 +1,24 @@
+---
+# 証明書をコピってApacheを再起動するだけ。
+
+ - name: add ssl ca
+   copy:
+     src: ssl/{{ webserver }}.ca
+     dest: /etc/pki/tls/certs/{{ webserver }}.ca
+   notify:
+     - "restart apache" 
+
+ - name: add ssl crt
+   copy:
+     src: ssl/{{ webserver }}.crt
+     dest: /etc/pki/tls/certs/{{ webserver }}.crt
+   notify:
+     - "restart apache" 
+
+ - name: add ssl key
+   copy:
+     src: ssl/{{ webserver }}.key
+     dest: /etc/pki/tls/private/{{ webserver }}.key
+   notify:
+     - "restart apache" 
+

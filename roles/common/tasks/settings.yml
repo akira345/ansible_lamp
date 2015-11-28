@@ -1,0 +1,38 @@
+---
+# EC2初期設定
+
+ - name: タイムゾーンをJSTにする
+   shell: cp /usr/share/zoneinfo/Japan /etc/localtime
+
+ - name: タイムゾーンをJSTにするその２
+   template:
+     src: clock.j2
+     dest: /etc/sysconfig/clock
+     owner: root
+     group: root
+     mode: 0644
+
+ - easy_install: name=pip
+
+# yumでインストールするとエラーになるので、pipでインストールする
+ - name: S3コマンドインストール
+   pip: name=s3cmd
+
+ - name: S3コマンド設定
+   sudo: true
+   template:
+     src: s3cfg.j2
+     dest: /root/.s3cfg
+     owner: root
+     group: root
+     mode: 0600
+
+ - name: スワップファイル作成スクリプトを仕込む
+   sudo: true
+   template:
+     src: rc.local.j2
+     dest: /etc/rc.d/rc.local
+     owner: root
+     group: root
+     mode: 0755
+

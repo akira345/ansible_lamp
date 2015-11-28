@@ -1,0 +1,9 @@
+#!/bin/bash
+
+backup_dir={{ db_backup_path }}
+backup_file=${backup_dir}{{ dbname }}_`date "+%Y%m%d"`.dmp
+/usr/bin/mysqldump -u {{ dbuser }} -p'{{ dbpass }}' {{ dbname }} > $backup_file
+
+#7日前のものは削除
+find $backup_dir -type f -name "{{ dbname }}_*.dmp" -mtime +7 -daystart | xargs rm
+

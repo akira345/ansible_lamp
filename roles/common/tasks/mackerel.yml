@@ -1,0 +1,49 @@
+---
+# mackerelエージェントインストール
+
+ - name: リポジトリの登録
+   shell: "curl -fsSL https://mackerel.io/assets/files/scripts/setup-yum.sh | sh"
+   
+ - name: エージェントインストール
+   yum: name={{ item }} state=installed
+   with_items:
+    - mackerel-agent
+    - mackerel-agent-plugins
+    - mackerel-check-plugins
+    
+ - name: エージェント設定
+   template: 
+     src: mackerel-agent.conf.j2 
+     dest: /etc/mackerel-agent/mackerel-agent.conf
+     mode: 0755
+     owner: root
+     group: root
+   notify: "restart mackerel"
+
+# Apacheプロセス監視スクリプトは以下サイトより拝借
+# http://dev.classmethod.jp/etc/mackerel-push-notify-process-count/
+
+ - name: Apacheプロセス監視その１
+   template: 
+     src: process.sh.j2 
+     dest: /opt/process.sh
+     mode: 0755
+     owner: root
+     group: root
+   notify: "restart mackerel"
+
+ - name: Apacheプロセス監視その２
+   template: 
+     src: process.py.j2 
+     dest: /opt/process.py
+     mode: 0755
+     owner: root
+     group: root
+   notify: "restart mackerel"
+
+ - name: エージェントスタート
+   service: 
+     name: mackerel-agent 
+     state: running
+     enabled: yes 
+

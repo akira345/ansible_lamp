@@ -1,0 +1,123 @@
+---
+# These tasks install http and the php modules.
+
+ - name: デフォルトのバーチャルホスト設定削除
+   file:
+     dest: /etc/httpd/conf.d/welcome.conf
+     state: absent
+   notify:
+      - "restart apache" 
+
+ - name: noindex.htmlを削除
+   file:
+     dest: /var/www/error/noindex.html
+     state: absent
+   notify:
+      - "restart apache"
+
+ - name: apache設定展開
+   template: 
+     src: httpd.conf.j2 
+     dest: /etc/httpd/conf/httpd.conf
+     mode: 0644
+     owner: root
+     group: root
+   notify: "restart apache"
+
+ - name: ssl設定展開
+   template: 
+     src: ssl.conf.j2 
+     dest: /etc/httpd/conf.d/ssl.conf
+     mode: 0644
+     owner: root
+     group: root
+   notify: "restart apache"
+
+ - name: "php.iniの修正"
+   lineinfile:
+     dest: /etc/php.ini
+     state: present
+     backrefs: yes
+     regexp: '{{ item.regexp }}'
+     line: '{{ item.line }}'
+   with_items:
+     - regexp: '^;date.timezone ='
+       line: 'date.timezone=Asia/Tokyo'
+     - regexp: '^;mbstring.language = Japanese'
+       line: 'mbstring.language = Japanese'
+   notify:
+     - "restart apache" 
+
+ - name: バーチャルホスト用設定展開
+   template: 
+     src: "{{ webserver }}.conf.j2"
+     dest: "/etc/httpd/conf.d/{{ webserver }}.conf"
+     mode: 0644
+     owner: root
+     group: root
+   notify: "restart apache"
+
+ - htpasswd:
+     path: /etc/httpd/htpasswd_wp
+     name: "{{ basic_auth_user }}"
+     password: "{{ basic_auth_passwd }}"
+     
+ - name: ログ出力先作成
+   file:
+     path: "/var/log/httpd/{{ webserver }}"
+     state: directory
+     owner: root
+     group: root
+     mode: 0755
+
+ - name: ログファイルローテーション設定展開
+   template: 
+     src: "{{ webserver }}_log.conf.j2"
+     dest: "/etc/logrotate.d/{{ webserver }}"
+     mode: 0644
+     owner: root
+     group: root
+   notify: "restart syslogd"
+
+ - name: S3にログを転送するシェル登録
+   template: 
+     src: "backup_cron.sh.j2"
+     dest: "/opt/backup_cron.sh"
+     mode: 0700
+     owner: root
+     group: root
+
+ - name: S3転送シェルをCronに登録
+   cron:
+     name: "log_copy_s3"
+     user: root
+     minute: "0"
+     hour: "6"
+     job: "/opt/backup_cron.sh"
+     state: present
+
+ - name: MySQLバックアップ先作成
+   file:
+     path: "{{ db_backup_path  }}"
+     state: directory
+     owner: '{{ apache_user }}'
+     group: '{{ apache_user }}'
+     mode: 0755
+
+ - name: バックアップシェル登録
+   template: 
+     src: "backup_db.sh.j2"
+     dest: "/opt/backup_db.sh"
+     mode: 0755
+     owner: '{{ apache_user }}'
+     group: '{{ apache_user }}'
+
+ - name: Cronに登録
+   cron:
+     name: "db_backup"
+     user: '{{ apache_user }}'
+     minute: "0"
+     hour: "0"
+     job: "/opt/backup_db.sh"
+
+

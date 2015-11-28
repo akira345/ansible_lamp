@@ -1,0 +1,79 @@
+NameVirtualHost *:80
+
+<VirtualHost *:80>
+
+    ServerName {{ webserver }}
+
+    Options  -Indexes
+    DocumentRoot /home/{{ apache_user }}/www/html
+
+    <Directory />
+        Options -Indexes
+    </Directory>
+    
+    <Files wp-login.php>
+        AuthName "Input ID & Password"
+        AuthType Basic
+        AuthUserFile /etc/httpd/htpasswd_wp
+        Require valid-user
+    </Files>
+
+    # Exclude the file upload and WP CRON scripts from authentication
+    <FilesMatch "(async-upload\.php|wp-cron\.php|xmlrpc\.php)$">
+        Satisfy Any
+        Order allow,deny
+        Allow from all
+        Deny from none
+    </FilesMatch>
+    
+    RMode config
+    RUidGid {{ apache_user }} {{ apache_user }}
+
+    LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" T:%T D:%D I:%I O:%O" {{ webserver }}_log
+    CustomLog /var/log/httpd/{{ webserver }}/access_log {{ webserver }}_log
+    ErrorLog /var/log/httpd/{{ webserver }}/error_log
+</VirtualHost>
+
+NameVirtualHost *:443
+
+<VirtualHost *:443>
+
+    ServerName {{ webserver }}
+
+    Options  -Indexes
+    DocumentRoot /home/{{ apache_user }}/www/html
+
+    <Directory />
+        Options -Indexes
+    </Directory>
+    
+    <Files wp-login.php>
+        AuthName "Input ID & Password"
+        AuthType Basic
+        AuthUserFile /etc/httpd/htpasswd_wp
+        Require valid-user
+    </Files>
+
+    # Exclude the file upload and WP CRON scripts from authentication
+    <FilesMatch "(async-upload\.php|wp-cron\.php|xmlrpc\.php)$">
+        Satisfy Any
+        Order allow,deny
+        Allow from all
+        Deny from none
+    </FilesMatch>
+    
+    SSLEngine on
+    SSLProtocol all -SSLv2 -SSLv3
+    SSLCiphersuite ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA
+    SSLCertificateFile      /etc/pki/tls/certs/{{ webserver }}.crt
+    SSLCertificateKeyFile   /etc/pki/tls/private/{{ webserver }}.key
+    SSLCertificateChainFile /etc/pki/tls/certs/{{ webserver }}.ca
+
+    RMode config
+    RUidGid {{ apache_user }} {{ apache_user }}
+
+    LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" T:%T D:%D I:%I O:%O" {{ webserver }}_log_ssl
+    CustomLog /var/log/httpd/{{ webserver }}/ssl_access_log {{ webserver }}_log_ssl
+    ErrorLog /var/log/httpd/{{ webserver }}/ssl_error_log
+
+</virtualHost>
